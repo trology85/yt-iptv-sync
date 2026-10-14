@@ -1,1 +1,37 @@
+name: Otomatik M3U ve Token Güncelleyici
 
+on:
+  schedule:
+    - cron: '0 */2 * * *' # Her 2 saatte bir
+  push:
+    paths:
+      - 'channels.json' # channels.json değiştiğinde anında tetiklenir
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Depoyu Klonla
+        uses: actions/checkout@v4
+
+      - name: Python Kur
+        uses: setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: yt-dlp Kur
+        run: pip install yt-dlp
+
+      - name: Güncelleme Betiğini Çalıştır
+        run: python update.py
+
+      - name: Değişiklikleri Kaydet ve Gönder
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add playlist.m3u channels.json
+          git commit -m "Otomatik m3u8 token güncellemesi [skip ci]" || exit 0
+          git push
