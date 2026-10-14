@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YT IPTV Sync - Kontrol Paneli</title>
+    <title>Stream Core - YT IPTV Sync Kontrol Paneli</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -11,6 +11,7 @@
             --accent-color: #3b82f6;
             --text-color: #e2e8f0;
             --border-color: #2d3748;
+            --success-color: #10b981;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -20,7 +21,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
         }
         header {
@@ -43,7 +44,7 @@
             margin-bottom: 15px;
         }
         label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #94a3b8; }
-        input[type="text"] {
+        input[type="text"], input[type="password"] {
             width: 100%;
             padding: 10px;
             background-color: #111;
@@ -62,6 +63,7 @@
             font-weight: 600;
         }
         button:hover { opacity: 0.9; }
+        .btn-success { background-color: var(--success-color); }
         .m3u-box {
             background-color: #111;
             padding: 12px;
@@ -72,48 +74,200 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 10px;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+        th { color: #94a3b8; font-weight: 600; }
+        .badge { background: #065f46; color: #34d399; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Stream Core - YT IPTV Sync</h1>
-            <span style="font-size: 0.85rem; color: #10b981;">● Aktif Sistem</span>
+            <span class="badge">● Sistem Aktif</span>
         </header>
 
+        <!-- RAW M3U LINK -->
         <div class="card">
-            <h3>IPTV Oynatıcı Bağlantı Linki (Raw M3U)</h3>
-            <p style="font-size: 0.9rem; color: #94a3b8;">Bu linki Stream Core Player uygulamana bir kez ekle. Arka plandaki otomasyon sayesinde linkler hiç kopmayacak.</p>
+            <h3>IPTV Oynatıcı Genel Bağlantı Linki (Raw M3U)</h3>
+            <p style="font-size: 0.9rem; color: #94a3b8;">Bu linki Stream Core Player uygulamana bir kez ekle. Tüm kanallar bu liste üzerinden çalışır.</p>
             <div class="m3u-box">
-                <span id="rawLink">Yükleniyor...</span>
-                <button onclick="copyLink()">Kopyala</button>
+                <span id="rawLink" style="font-size: 0.85rem; color: #38bdf8;">Yükleniyor...</span>
+                <button onclick="copyRawLink()">Kopyala</button>
             </div>
         </div>
 
+        <!-- AKTİF KANALLAR VE M3U8 LİNKLERİ -->
         <div class="card">
-            <h3>Yeni YouTube Kanalı Ekle</h3>
+            <h3>Çözülmüş Aktif M3U8 Linkleri</h3>
+            <p style="font-size: 0.9rem; color: #94a3b8;">Sistemin anlık olarak YouTube'dan çözdüğü ve aktif tuttuğu yayın akışları:</p>
+            <div id="channelTableContainer">Yükleniyor...</div>
+        </div>
+
+        <!-- YENİ KANAL EKLEME FORMU -->
+        <div class="card">
+            <h3>Web Üzerinden Yeni Kanal Ekle</h3>
+            <p style="font-size: 0.9rem; color: #94a3b8;">Buradan ekleyeceğin kanal otomatik olarak depoya işlenecek ve Actions tetiklenecektir.</p>
+            
             <div class="form-group">
-                <label>Kanal Adı / Başlık</label>
-                <input type="text" id="channelName" placeholder="Örn: 24/7 Yeşilçam Kuşağı">
+                <label>GitHub Personal Access Token (PAT) [İlk girişte gereklidir, tarayıcıda saklanır]</label>
+                <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+            </div>
+            <div class="form-group">
+                <label>Kanal Adı</label>
+                <input type="text" id="channelName" placeholder="Örn: TRT Belgesel 24/7">
             </div>
             <div class="form-group">
                 <label>YouTube Canlı Yayın URL'si</label>
                 <input type="text" id="channelUrl" placeholder="https://www.youtube.com/watch?v=...">
             </div>
-            <button onclick="alert('Kanalları doğrudan channels.json üzerinden veya GitHub arayüzünden ekleyebilirsin!')">Kanal Ekle</button>
+            <button class="btn-success" onclick="addNewChannel()">Kanali Kaydet ve Push Yap</button>
         </div>
     </div>
 
     <script>
-    // Doğrudan sabit ve hatasız Raw Link
-    const rawUrl = "https://raw.githubusercontent.com/trology85/yt-iptv-sync/main/playlist.m3u";
-    document.getElementById('rawLink').innerText = rawUrl;
+        // GitHub Bilgileri (Kendi kullanıcı adın ve depon)
+        const GITHUB_USER = "trology85";
+        const GITHUB_REPO = "yt-iptv-sync";
+        
+        // Raw M3U Linki
+        const rawUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/playlist.m3u`;
+        document.getElementById('rawLink').innerText = rawUrl;
 
-    function copyLink() {
-        navigator.clipboard.writeText(rawUrl);
-        alert('M3U linki panoya kopyalandı!');
-    }
-</script>
+        function copyRawLink() {
+            navigator.clipboard.writeText(rawUrl);
+            alert('Genel M3U linki panoya kopyalandı!');
+        }
+
+        // Sayfa açıldığında tarayıcıda kayıtlı token varsa getir
+        window.onload = function() {
+            const savedToken = localStorage.getItem('gh_iptv_token');
+            if (savedToken) {
+                document.getElementById('ghToken').value = savedToken;
+            }
+            loadPlaylistChannels();
+        };
+
+        // playlist.m3u dosyasını okuyup m3u8 linklerini tabloya dökme
+        async function loadPlaylistChannels() {
+            const container = document.getElementById('channelTableContainer');
+            try {
+                const response = await fetch('playlist.m3u?t=' + Date.now());
+                if (!response.ok) throw new Error("Playlist bulunamadı");
+                const text = await response.text();
+                const lines = text.split('\n');
+                
+                let channels = [];
+                let currentName = '';
+
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].startsWith('#EXTINF:')) {
+                        const parts = lines[i].split(',');
+                        currentName = parts[parts.length - 1].trim();
+                    } else if (lines[i].startsWith('http')) {
+                        if (currentName) {
+                            channels.push({ name: currentName, m3u8: lines[i].trim() });
+                            currentName = '';
+                        }
+                    }
+                }
+
+                if (channels.length === 0) {
+                    container.innerHTML = '<p style="color: #94a3b8;">Listede henüz aktif kanal görünmüyor (Actions henüz çalışmamış olabilir).</p>';
+                    return;
+                }
+
+                let html = '<table><tr><th>Kanal Adı</th><th>Anlık M3U8 Çözülmüş Link</th><th style="width: 90px;">İşlem</th></tr>';
+                channels.forEach((ch, index) => {
+                    html += `<tr>
+                        <td style="font-weight: 600; color: #fff;">${ch.name}</td>
+                        <td style="font-family: monospace; font-size: 0.75rem; color: #38bdf8; word-break: break-all;">${ch.m3u8}</td>
+                        <td><button onclick="navigator.clipboard.writeText('${ch.m3u8}'); alert('${ch.name} M3U8 linki kopyalandı!')" style="padding: 6px 10px; font-size: 0.75rem;">Kopyala</button></td>
+                    </tr>`;
+                });
+                html += '</table>';
+                container.innerHTML = html;
+
+            } catch (e) {
+                container.innerHTML = '<p style="color: #94a3b8;">Playlist dosyası henüz oluşturulmamış veya yüklenemiyor. Actions çalıştırıldığında aktif olacaktır.</p>';
+            }
+        }
+
+        // GitHub API kullanarak channels.json dosyasına yeni kanal ekleme
+        async function addNewChannel() {
+            const token = document.getElementById('ghToken').value.trim();
+            const name = document.getElementById('channelName').value.trim();
+            const url = document.getElementById('channelUrl').value.trim();
+
+            if (!token || !name || !url) {
+                alert("Lütfen Token, Kanal Adı ve YouTube URL alanlarını eksiksiz doldurun!");
+                return;
+            }
+
+            // Token'ı tarayıcıda sakla
+            localStorage.setItem('gh_iptv_token', token);
+
+            alert("Kanal ekleniyor ve GitHub'a gönderiliyor, lütfen bekleyin...");
+
+            const apiEndpoint = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/channels.json`;
+
+            try {
+                // 1. Mevcut channels.json dosyasını ve SHA değerini al
+                const getRes = await fetch(apiEndpoint, {
+                    headers: { "Authorization": `token ${token}` }
+                });
+
+                if (!getRes.ok) throw new Error("GitHub yetkilendirme hatası! Token'ınızı kontrol edin.");
+                const fileData = await getRes.json();
+                
+                // Mevcut JSON içeriğini decode et
+                const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
+                let channelsList = JSON.parse(decodedContent);
+
+                // Yeni kanalı ekle
+                channelsList.push({ name: name, url: url });
+
+                // Yeni içeriği encode et
+                const newContentEncoded = btoa(unescape(encodeURIComponent(JSON.stringify(channelsList, null, 2))));
+
+                // 2. Güncellenmiş dosyayı GitHub'a PUT ile gönder
+                const putRes = await fetch(apiEndpoint, {
+                    method: 'PUT',
+                    headers: {
+                        "Authorization": `token ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: `Web panelinden eklendi: ${name}`,
+                        content: newContentEncoded,
+                        sha: fileData.sha
+                    })
+                });
+
+                if (!putRes.ok) throw new Error("Dosya güncellenemedi.");
+
+                alert("Başarıyla eklendi! GitHub Actions otomatik tetiklendi. 1 dakika içinde M3U8 linkiniz hazır olacaktır.");
+                document.getElementById('channelName').value = '';
+                document.getElementById('channelUrl').value = '';
+                
+                // 5 saniye sonra sayfayı yenile
+                setTimeout(() => location.reload(), 5000);
+
+            } catch (err) {
+                alert("Hata oluştu: " + err.message);
+            }
+        }
+    </script>
 </body>
 </html>
