@@ -106,17 +106,14 @@
     </div>
 
     <script>
-        // Otomatik Raw M3U Linkini Hesapla
-        const pathArray = window.location.pathname.split('/');
-        const user = pathArray[1];
-        const repo = pathArray[2];
-        const rawUrl = `https://raw.githubusercontent.com/${user}/${repo}/main/playlist.m3u`;
-        document.getElementById('rawLink').innerText = rawUrl;
+    // Doğrudan sabit ve hatasız Raw Link
+    const rawUrl = "https://raw.githubusercontent.com/trology85/yt-iptv-sync/main/playlist.m3u";
+    document.getElementById('rawLink').innerText = rawUrl;
 
-        function copyLink() {
-            navigator.clipboard.writeText(rawUrl);
-            alert('M3U linki panoya kopyalandı!');
-        }
-    </script>
+    function copyLink() {
+        navigator.clipboard.writeText(rawUrl);
+        alert('M3U linki panoya kopyalandı!');
+    }
+</script>
 </body>
 </html>
