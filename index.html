@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT IPTV Sync - Kontrol Paneli</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent-color: #3b82f6;
+            --text-color: #e2e8f0;
+            --border-color: #2d3748;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+        h1 { font-size: 1.5rem; margin: 0; color: #fff; }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #94a3b8; }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #111;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: #fff;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover { opacity: 0.9; }
+        .m3u-box {
+            background-color: #111;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            word-break: break-all;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Stream Core - YT IPTV Sync</h1>
+            <span style="font-size: 0.85rem; color: #10b981;">● Aktif Sistem</span>
+        </header>
+
+        <div class="card">
+            <h3>IPTV Oynatıcı Bağlantı Linki (Raw M3U)</h3>
+            <p style="font-size: 0.9rem; color: #94a3b8;">Bu linki Stream Core Player uygulamana bir kez ekle. Arka plandaki otomasyon sayesinde linkler hiç kopmayacak.</p>
+            <div class="m3u-box">
+                <span id="rawLink">Yükleniyor...</span>
+                <button onclick="copyLink()">Kopyala</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Yeni YouTube Kanalı Ekle</h3>
+            <div class="form-group">
+                <label>Kanal Adı / Başlık</label>
+                <input type="text" id="channelName" placeholder="Örn: 24/7 Yeşilçam Kuşağı">
+            </div>
+            <div class="form-group">
+                <label>YouTube Canlı Yayın URL'si</label>
+                <input type="text" id="channelUrl" placeholder="https://www.youtube.com/watch?v=...">
+            </div>
+            <button onclick="alert('Kanalları doğrudan channels.json üzerinden veya GitHub arayüzünden ekleyebilirsin!')">Kanal Ekle</button>
+        </div>
+    </div>
+
+    <script>
+        // Otomatik Raw M3U Linkini Hesapla
+        const pathArray = window.location.pathname.split('/');
+        const user = pathArray[1];
+        const repo = pathArray[2];
+        const rawUrl = `https://raw.githubusercontent.com/${user}/${repo}/main/playlist.m3u`;
+        document.getElementById('rawLink').innerText = rawUrl;
+
+        function copyLink() {
+            navigator.clipboard.writeText(rawUrl);
+            alert('M3U linki panoya kopyalandı!');
+        }
+    </script>
+</body>
+</html>
